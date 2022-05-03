@@ -1,3 +1,5 @@
 import spacy
-
-spacy.cli.download('en_core_web_lg')
+try:
+  spacy.cli.download('en_core_web_lg')
+except:
+  pass
