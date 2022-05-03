@@ -9,7 +9,7 @@ from cassandraManager import CassandraManager
 
 import subprocess
 subprocess.run(['python', 'downloadSpacy.py'])
-nlp = spacy.load("en_core_web_md")
+nlp = spacy.load("en_core_web_lg")
 
 categories = ["Politics", "Sports", "World", "Finance",
               "Technology", "Lifestyle", "Entertainment", "Trending", "Business"]
