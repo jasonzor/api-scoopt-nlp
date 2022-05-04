@@ -130,9 +130,9 @@ def getFlaskSimilar():
     tableName = request.json.get('table_name')
     reverseIndex = request.json.get('reverse_index')   
     word, source = splitIndex(reverseIndex)
-    if(word not in indexNlps[tableName][source].keys():
-      indexes[tableName][source].append(word)
-      indexNlps[tableName][source][word] = nlp(word)
+    if(word not in indexNlps[tableName][source].keys()):
+        indexes[tableName][source].append(word)
+        indexNlps[tableName][source][word] = nlp(word)
     return json.dumps(getMostSimilarWords(tableName, word, source, indexes[tableName][source]))
 
 @app.route('/normalize', methods=['POST'])
