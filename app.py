@@ -7,15 +7,31 @@ from flask import jsonify, make_response, request
 from collections import Counter
 from cassandraManager import CassandraManager
 
-import subprocess
-subprocess.run(['python', 'downloadSpacy.py'])
 nlp = spacy.load("en_core_web_lg")
 
 categories = ["Politics", "Sports", "World", "Finance",
               "Technology", "Lifestyle", "Entertainment", "Trending", "Business"]
 
 cassyManager = CassandraManager()
-
+print("Cassandra Manager: fetching indexes...")
+indexes = {
+            "scoopt_title_index": cassyManager.get_table_indexes("scoopt_title_index"),
+            "scoopt_text_index": cassyManager.get_table_indexes("scoopt_text_index")
+}
+print("Cassandra Manager: done fetching indexes")
+print("Spacy: processing indexes...")
+indexNlps = {}
+for tableKey in indexes.keys():
+    if(tableKey not in indexNlps.keys()):
+        indexNlps[tableKey] = {}
+    for sourceKey in indexes[tableKey].keys():
+        if(sourceKey not in indexNlps[tableKey].keys()):
+            indexNlps[tableKey][sourceKey] = {}
+        print(tableKey, sourceKey)
+        
+        for index in indexes[tableKey][sourceKey]:
+            indexNlps[tableKey][sourceKey][index] = nlp(index)
+print("Spacy: done processing indexes")
 def splitIndex(index):
     names = ["YOUTUBE", "REDDIT", "TWITCH", "AXIOS", "WIKIPEDIA", "TIKTOK", "DAILYMOTION"]
     for name in names:
@@ -24,13 +40,13 @@ def splitIndex(index):
     
     return None, None
 
-def getMostSimilarWords(word, source, wordList):
+def getMostSimilarWords(tableName, word, source, wordList):
     wordSimilarityList = []
-    wordToken = nlp(word)
+    wordToken = indexNlps[tableName][source][word]
     for otherWord in wordList:
         if(otherWord == word):
             continue
-        otherWordToken = nlp(otherWord)
+        otherWordToken = indexNlps[tableName][source][otherWord]
         similarity = wordToken.similarity(otherWordToken)
         if similarity < 0.71:
             continue 
@@ -112,10 +128,11 @@ def getFlaskCategories():
 @app.route('/getSimilarIndexes', methods=['POST'])
 def getFlaskSimilar():
     tableName = request.json.get('table_name')
-    reverseIndex = request.json.get('reverse_index')
-    indexes = cassyManager.get_table_indexes(tableName)
+    reverseIndex = request.json.get('reverse_index')   
     word, source = splitIndex(reverseIndex)
-    return json.dumps(getMostSimilarWords(word, source, indexes[source]))
+    indexes[tableName][source].append(word)
+    indexNlps[tableName][source][word] = nlp(word)
+    return json.dumps(getMostSimilarWords(tableName, word, source, indexes[tableName][source]))
 
 @app.route('/normalize', methods=['POST'])
 def getFlaskNormalized():
@@ -133,5 +150,6 @@ def getFlaskNormalized():
     
     return json.dumps(result)
     
+
 if __name__ == "__main__":
     app.run()
