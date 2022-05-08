@@ -33,11 +33,13 @@ for tableKey in indexes.keys():
             indexNlps[tableKey][sourceKey][index] = nlp(index)
 print("Spacy: done processing indexes")
 def splitIndex(index):
-    names = ["YOUTUBE", "REDDIT", "TWITCH", "AXIOS", "WIKIPEDIA", "TIKTOK", "DAILYMOTION"]
-    for name in names:
+    for name in cassyManager.sources:
         if name in index:
             return index.split(name)[0], name
     
+    if(cassyManager.refresh_sources(index)):
+        return splitIndex(index)
+
     return None, None
 
 def getMostSimilarWords(tableName, word, source, wordList):
