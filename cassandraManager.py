@@ -30,8 +30,9 @@ class CassandraManager:
                         nameFound = True
                         break
                 
-                if(not self.refresh_sources(post.reverse_index)):
-                    break
+                if nameFound == False:
+                    if(not self.refresh_sources(post.reverse_index)):
+                        break
         return cleanedPosts
         
     def refresh_sources(self, refresher):
