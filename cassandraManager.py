@@ -13,19 +13,41 @@ class CassandraManager:
         auth_provider = PlainTextAuthProvider('XSuETAMimsIkAMLUsaFBClry', 'INUB9G-p6Gvq2QGdNKWwwNcDbnk2lqpnHz+yc0E.OiCQk8vmGXsJgQIr-ccgZw_.tzTnu1M6D20CoUXPQZCoXnn5WFB16ZwX0Za+e2.zqy1jqXMjaYDqUfZj,sp-e5FE')
         cluster = Cluster(cloud=cloud_config, auth_provider=auth_provider)
         self.session = cluster.connect()
+        self.sources = []
+        self.refresher = ""
 
     def get_table_indexes(self, table_name):
         posts = self.session.execute("select reverse_index from god." + table_name).all()
         cleanedPosts = {}
         for post in posts:
-            names = ["YOUTUBE", "REDDIT", "TWITCH", "AXIOS", "WIKIPEDIA", "TIKTOK", "DAILYMOTION"]
-            for name in names:
-                if name in post.reverse_index:
-                    if name not in cleanedPosts.keys():
-                        cleanedPosts[name] = []
-                    cleanedPosts[name].append(post.reverse_index.split(name)[0])
+            nameFound = False
+            while(nameFound == False):
+                for name in self.sources:
+                    if name in post.reverse_index:
+                        if name not in cleanedPosts.keys():
+                            cleanedPosts[name] = []
+                        cleanedPosts[name].append(post.reverse_index.split(name)[0])
+                        nameFound = True
+                        break
+                
+                if(not self.refresh_sources(post.reverse_index)):
                     break
         return cleanedPosts
+        
+    def refresh_sources(self, refresher):
+        if(self.refresher == refresher):
+            return False
+
+        self.sources = self.get_sources()
+        self.refresher = refresher
+
+    def get_sources(self):
+        sources = self.session.execute("SELECT source from god.posts_by_source GROUP BY source").all()
+        parsedSources = []
+        for sourceRow in sources:
+            parsedSources.append(sourceRow.source)
+        return parsedSources
+
 #print(manager.session.execute("SELECT * FROM god.scoopt_category_index where reverse_index='LifestyleYOUTUBE'").all())
 #manager.session.execute("CREATE TABLE god.posts_by_url(category list<text>, date date, full_text text, image text, is_trending boolean, is_video boolean, source text, summary text, tags list<text>, title text, url text, vid_url text, PRIMARY KEY (url))")
 #manager.session.execute("CREATE TABLE god.posts_by_source(category frozen<list<text>>, date date, full_text text, image text, is_trending boolean, is_video boolean, source text, summary text, tags frozen<list<text>>, title text, url text, vid_url text, PRIMARY KEY ((source), is_trending, date, category, tags, url))")
