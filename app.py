@@ -7,6 +7,8 @@ from flask import jsonify, make_response, request
 from collections import Counter
 from cassandraManager import CassandraManager
 from spacy.lang.en.stop_words import STOP_WORDS
+from string import punctuation
+from heapq import nlargest
 
 nlp = spacy.load("en_core_web_lg")
 
