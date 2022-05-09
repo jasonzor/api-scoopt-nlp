@@ -14,6 +14,10 @@ nlp = spacy.load("en_core_web_lg")
 
 categories = ["Politics", "Sports", "World", "Finance",
               "Technology", "Lifestyle", "Entertainment", "Trending", "Business"]
+categoriesNlp = {}
+
+for category in categories:
+    categoriesNlp[category] = nlp(category)
 '''
 cassyManager = CassandraManager()
 print("Cassandra Manager: fetching indexes...")
@@ -48,7 +52,7 @@ def splitIndex(index):
     return None, None
 '''
 
-def summarize(text, per=0.5):
+def summarize(text, per=0.05):
     doc= nlp(text)
     tokens=[token.text for token in doc]
     word_frequencies={}
@@ -112,7 +116,7 @@ def getTopCategories(tags):
         token1 = nlp(i)
         word_dict[str(i)] = {}
         for j in categories:
-            token2 = nlp(j)
+            token2 = categoriesNlp[j]
             word_dict[str(i)][str(j)] = float(token1.similarity(token2))
         # print(j,i,":")
         # print(token2,token1,":",token1.similarity(token2))
@@ -160,7 +164,12 @@ def getFlaskTags():
 def getFlaskCategories():
     corpus = request.json.get('text')
     numTags = request.json.get('no')
-    return json.dumps(getTopCategories(getTags(corpus, numTags)))
+    includeTags = request.json.get('include_tags')
+    if(includeTags is None):
+        return json.dumps(getTopCategories(getTags(corpus, numTags)))
+    else:
+        tags = getTags(corpus, numTags)
+        return json.dumps({"tags": tags, "category": getTopCategories(tags)})
 
 @app.route('/getSummary', methods=['POST'])
 def getFlaskSummary():
