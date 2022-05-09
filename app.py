@@ -6,6 +6,7 @@ import string
 from flask import jsonify, make_response, request
 from collections import Counter
 from cassandraManager import CassandraManager
+from spacy.lang.en.stop_words import STOP_WORDS
 
 nlp = spacy.load("en_core_web_lg")
 
