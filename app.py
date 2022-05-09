@@ -45,7 +45,7 @@ def splitIndex(index):
     return None, None
 '''
 
-def summarize(text, per=5):
+def summarize(text, per=0.05):
     doc= nlp(text)
     tokens=[token.text for token in doc]
     word_frequencies={}
@@ -162,7 +162,7 @@ def getFlaskCategories():
 @app.route('/getSummary', methods=['POST'])
 def getFlaskSummary():
     corpus = request.json.get('text')
-    return getSummary(corpus)
+    return summarize(corpus)
 '''
 @app.route('/getSimilarIndexes', methods=['POST'])
 def getFlaskSimilar():
