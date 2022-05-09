@@ -48,7 +48,7 @@ def splitIndex(index):
     return None, None
 '''
 
-def summarize(text, per=0.05):
+def summarize(text, per=0.5):
     doc= nlp(text)
     tokens=[token.text for token in doc]
     word_frequencies={}
