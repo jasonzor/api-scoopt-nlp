@@ -11,13 +11,14 @@ nlp = spacy.load("en_core_web_lg")
 
 categories = ["Politics", "Sports", "World", "Finance",
               "Technology", "Lifestyle", "Entertainment", "Trending", "Business"]
-
+'''
 cassyManager = CassandraManager()
 print("Cassandra Manager: fetching indexes...")
 indexes = {
             "scoopt_title_index": cassyManager.get_table_indexes("scoopt_title_index"),
             "scoopt_text_index": cassyManager.get_table_indexes("scoopt_text_index")
 }
+
 print("Cassandra Manager: done fetching indexes")
 print("Spacy: processing indexes...")
 indexNlps = {}
@@ -32,6 +33,7 @@ for tableKey in indexes.keys():
         for index in indexes[tableKey][sourceKey]:
             indexNlps[tableKey][sourceKey][index] = nlp(index)
 print("Spacy: done processing indexes")
+
 def splitIndex(index):
     for name in cassyManager.sources:
         if name in index:
@@ -41,6 +43,36 @@ def splitIndex(index):
         return splitIndex(index)
 
     return None, None
+'''
+
+def summarize(text, per=5):
+    doc= nlp(text)
+    tokens=[token.text for token in doc]
+    word_frequencies={}
+    for word in doc:
+        if word.text.lower() not in list(STOP_WORDS):
+            if word.text.lower() not in punctuation:
+                if word.text not in word_frequencies.keys():
+                    word_frequencies[word.text] = 1
+                else:
+                    word_frequencies[word.text] += 1
+    max_frequency=max(word_frequencies.values())
+    for word in word_frequencies.keys():
+        word_frequencies[word]=word_frequencies[word]/max_frequency
+    sentence_tokens= [sent for sent in doc.sents]
+    sentence_scores = {}
+    for sent in sentence_tokens:
+        for word in sent:
+            if word.text.lower() in word_frequencies.keys():
+                if sent not in sentence_scores.keys():                            
+                    sentence_scores[sent]=word_frequencies[word.text.lower()]
+                else:
+                    sentence_scores[sent]+=word_frequencies[word.text.lower()]
+    select_length=int(len(sentence_tokens)*per)
+    summary=nlargest(select_length, sentence_scores,key=sentence_scores.get)
+    final_summary=[word.text for word in summary]
+    summary=''.join(final_summary)
+    return summary
 
 def getMostSimilarWords(tableName, word, source, wordList):
     wordSimilarityList = []
@@ -127,6 +159,11 @@ def getFlaskCategories():
     numTags = request.json.get('no')
     return json.dumps(getTopCategories(getTags(corpus, numTags)))
 
+@app.route('/getSummary', methods=['POST'])
+def getFlaskSummary():
+    corpus = request.json.get('text')
+    return getSummary(corpus)
+'''
 @app.route('/getSimilarIndexes', methods=['POST'])
 def getFlaskSimilar():
     tableName = request.json.get('table_name')
@@ -152,7 +189,7 @@ def getFlaskNormalized():
         result.append(token.lemma_.lower().replace("'", "''"))
     
     return json.dumps(result)
-    
+'''
 
 if __name__ == "__main__":
     app.run()
