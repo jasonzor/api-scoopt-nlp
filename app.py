@@ -54,13 +54,14 @@ def splitIndex(index):
 
 
 def summarize(text, per=0.3):
+    global summaryPassMap
     doc= nlp(text)
     tokens=[token.text for token in doc]
     word_frequencies={}
     for word in doc:
         lowerWord = word.text.lower()
         if summaryPassMap.get(lowerWord) is None:
-                if word_frequencies.get(lowerWord) is not None:
+                if word_frequencies.get(lowerWord) is None:
                     word_frequencies[lowerWord] = 1
                 else:
                     word_frequencies[lowerWord] += 1
