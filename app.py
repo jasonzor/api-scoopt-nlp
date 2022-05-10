@@ -18,6 +18,14 @@ categoriesNlp = {}
 
 for category in categories:
     categoriesNlp[category] = nlp(category)
+    
+summaryPassMap = {}
+for word in STOP_WORDS:
+    summaryPassMap[word] = True
+
+for word in punctuation:
+    summaryPassMap[word] = True
+
 '''
 cassyManager = CassandraManager()
 print("Cassandra Manager: fetching indexes...")
