@@ -58,7 +58,7 @@ def summarize(text, per=0.3):
     tokens=[token.text for token in doc]
     word_frequencies={}
     for word in doc:
-        lowerWord = word.lower()
+        lowerWord = word.text.lower()
         if summaryPassMap.get(lowerWord) is None:
                 if word_frequencies.get(lowerWord) is not None:
                     word_frequencies[lowerWord] = 1
