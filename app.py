@@ -52,17 +52,18 @@ def splitIndex(index):
     return None, None
 '''
 
-def summarize(text, per=0.05):
+
+def summarize(text, per=0.3):
     doc= nlp(text)
     tokens=[token.text for token in doc]
     word_frequencies={}
     for word in doc:
-        if word.text.lower() not in list(STOP_WORDS):
-            if word.text.lower() not in punctuation:
-                if word.text not in word_frequencies.keys():
-                    word_frequencies[word.text] = 1
+        lowerWord = word.lower()
+        if summaryPassMap.get(lowerWord) is None:
+                if word_frequencies.get(lowerWord) is not None:
+                    word_frequencies[lowerWord] = 1
                 else:
-                    word_frequencies[word.text] += 1
+                    word_frequencies[lowerWord] += 1
     max_frequency=max(word_frequencies.values())
     for word in word_frequencies.keys():
         word_frequencies[word]=word_frequencies[word]/max_frequency
@@ -70,8 +71,9 @@ def summarize(text, per=0.05):
     sentence_scores = {}
     for sent in sentence_tokens:
         for word in sent:
-            if word.text.lower() in word_frequencies.keys():
-                if sent not in sentence_scores.keys():                            
+            lowerWord = word.text.lower()
+            if word_frequencies.get(lowerWord) is not None:
+                if sentence_scores.get(sent) is None:                            
                     sentence_scores[sent]=word_frequencies[word.text.lower()]
                 else:
                     sentence_scores[sent]+=word_frequencies[word.text.lower()]
